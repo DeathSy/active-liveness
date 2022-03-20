@@ -1,6 +1,7 @@
 {
   "name": "active-liveness",
   "version": "0.1.0",
+  "homepage": "https://deathsy.github.io/active-liveness",
   "private": true,
   "dependencies": {
     "@rvxlab/tailwind-plugin-ios-full-height": "^1.1.0",
