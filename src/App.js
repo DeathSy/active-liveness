@@ -2,11 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import classNames from "classnames";
 import styled, { css, keyframes } from "styled-components";
 import { useFaceDetector, useRecorder } from './hooks'
+import { livenessService, faceComparisonService } from './services'
 
 const second = 1000;
-const BASE_URL = "https://ml-uat.appman.co.th";
-const API_KEY = "D0VJdgq51n8Gsgs6FyjiY7Ib3qMEtWJK3Fy93BoB";
-const REF_NO = "EKYC20220304070952355";
 
 const CircularFrame = keyframes`
   to {
@@ -28,33 +26,6 @@ const Svg = styled.svg`
     animation-delay: 0.5s;
   }
 `;
-
-// TODO: implement ekyc service
-const livenessService = async (clientVdo) => {
-  const body = new FormData();
-  body.append("video", clientVdo);
-  body.append("rotate", true);
-  body.append("sequence", "yaw,nod");
-  try {
-    const request = await fetch(`${BASE_URL}/mw/e-kyc/fr-active-liveness`, {
-      method: "POST",
-      body,
-      headers: {
-        "x-api-key": API_KEY,
-        "reference-number": REF_NO,
-      },
-    });
-    return request.json();
-  } catch (err) {
-    console.log(err);
-  }
-  return true;
-};
-
-const faceComparisonService = async (base64Image) => {
-  // console.log(base64Image);
-  return true;
-};
 
 const snapVideo = (video) => {
   const canvas = document.createElement("canvas");
