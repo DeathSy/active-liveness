@@ -8,7 +8,7 @@ export const livenessService = async (clientVdo) => {
   body.append("rotate", true);
   body.append("sequence", "yaw,nod");
   try {
-    const request = await fetch(`${BASE_URL}/mw/e-kyc/fr-active-liveness`, {
+    const response = await fetch(`${BASE_URL}/mw/e-kyc/fr-active-liveness`, {
       method: "POST",
       body,
       headers: {
@@ -16,7 +16,7 @@ export const livenessService = async (clientVdo) => {
         "reference-number": REF_NO,
       },
     });
-    return request.json();
+    return response.json();
   } catch (err) {
     console.log(err);
   }
