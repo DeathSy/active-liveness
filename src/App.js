@@ -3,6 +3,7 @@ import classNames from "classnames";
 import styled, { css, keyframes } from "styled-components";
 import { useFaceDetector, useRecorder } from './hooks'
 import { livenessService, faceComparisonService } from './services'
+import { snapVideo } from './utilities'
 
 const second = 1000;
 
@@ -26,15 +27,6 @@ const Svg = styled.svg`
     animation-delay: 0.5s;
   }
 `;
-
-const snapVideo = (video) => {
-  const canvas = document.createElement("canvas");
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  canvas.getContext("2d").drawImage(video, 0, 0, canvas.width, canvas.height);
-  const dataURL = canvas.toDataURL();
-  return dataURL;
-};
 
 export const ActiveLivenessEkyc = () => {
   const progressRef = useRef();
