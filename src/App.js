@@ -1,17 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import classNames from "classnames";
 import styled, { css, keyframes } from "styled-components";
-
-// machine learning stuff
-import * as Blazeface from "@tensorflow-models/blazeface";
-import * as tf from "@tensorflow/tfjs-core";
-import * as tfjsWasm from "@tensorflow/tfjs-backend-wasm";
-
-tfjsWasm.setWasmPaths(
-  `https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-wasm@${tfjsWasm.version_wasm}/dist/`
-);
-tf.setBackend("wasm");
-// end machine learning stuff
+import { useFaceDetector, useRecorder } from './hooks'
 
 const second = 1000;
 const BASE_URL = "https://ml-uat.appman.co.th";
@@ -42,11 +32,7 @@ const Svg = styled.svg`
 // TODO: implement ekyc service
 const livenessService = async (clientVdo) => {
   const body = new FormData();
-  // ! need to convert to Blob to real mp4 file otherwise backend server cannot blob file metadata
-  const file = new File([clientVdo], `${new Date()}.mp4`, {
-    type: getSupportedRecorderMimeType(),
-  });
-  body.append("video", file);
+  body.append("video", clientVdo);
   body.append("rotate", true);
   body.append("sequence", "yaw,nod");
   try {
@@ -68,118 +54,6 @@ const livenessService = async (clientVdo) => {
 const faceComparisonService = async (base64Image) => {
   // console.log(base64Image);
   return true;
-};
-
-const initialMediaDevice = async () => {
-  return navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-};
-
-const getSupportedRecorderMimeType = () => {
-  const mp4 = MediaRecorder.isTypeSupported("video/mp4");
-  const webm = MediaRecorder.isTypeSupported("video/webm");
-
-  if (webm) return "video/webm";
-
-  if (mp4) return "video/mp4";
-};
-
-const useRecorder = (videoRef) => {
-  const deviceRef = useRef();
-  const recorder = useRef();
-  const recordedBlob = useRef([]);
-  const [recordedVideo, setRecordedVideo] = useState();
-  const [isReady, setReady] = useState(false);
-  const [isStarted, setStarted] = useState(false);
-
-  useEffect(() => {
-    initialMediaDevice().then((stream) => {
-      deviceRef.current = stream;
-      videoRef.current.srcObject = stream;
-      setReady(true);
-    });
-  }, [videoRef]);
-
-  const startRecorder = () => {
-    recorder.current = new MediaRecorder(deviceRef.current, {
-      videoBitsPerSecond: 2 * 1000 * 1000, // 2 Mbit/s
-      mimeType: getSupportedRecorderMimeType(),
-    });
-
-    recorder.current.addEventListener("start", (e) => {
-      console.log("record started");
-      setStarted(true);
-    });
-
-    recorder.current.addEventListener("dataavailable", (e) => {
-      recordedBlob.current.push(e.data);
-      console.log("generating video record");
-    });
-
-    recorder.current.addEventListener("stop", () => {
-      const recordedVideo = new Blob(recordedBlob.current, {
-        type: recorder.current.mimeType,
-      });
-      recordedBlob.current = [];
-      setRecordedVideo(recordedVideo);
-      console.log("record ended");
-      setStarted(false);
-    });
-
-    recorder.current.start();
-  };
-
-  const stopRecorder = () => {
-    if (recorder.current && isStarted) recorder.current.stop();
-  };
-
-  return [
-    { isReady, recordedVideo },
-    { startRecorder, stopRecorder },
-  ];
-};
-
-const useFaceDetector = (vdo) => {
-  /*
-   * Face detection effect
-   * Steps:
-   * - Detect whether there are any face(s) inside capture frame
-   * - IF there are turn `isFaceDetect` value to `true`
-   * - If not show error ring (red ring)
-   *
-   * Notes:
-   * - Face detection should be running in the background and error ring
-   *  should shown up even when user is on face capturing step
-   * - When ever error ring is shown up user need to do current step again
-   *  from the beginning
-   */
-
-  const [isReady, setReady] = useState(false);
-  const [isFaceDetected, setFaceDetected] = useState(false);
-  const faceModel = useRef();
-
-  useEffect(() => {
-    Blazeface.load().then((model) => {
-      faceModel.current = model;
-      setReady(true);
-    });
-  }, []);
-
-  useEffect(() => {
-    if (isReady) {
-      /*
-       * Face detection model is detecting every 200ms (5 fps)
-       */
-      setInterval(() => {
-        faceModel.current.estimateFaces(vdo, false).then((prediction) => {
-          setFaceDetected(
-            prediction.length ? prediction[0].probability > 0.95 : false
-          );
-        });
-      }, 200);
-    }
-  }, [isReady, vdo]);
-
-  return [{ isFaceDetected }];
 };
 
 const snapVideo = (video) => {
