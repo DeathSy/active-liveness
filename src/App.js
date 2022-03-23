@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import classNames from "classnames";
 import styled, { css, keyframes } from "styled-components";
-import { useFaceDetector, useRecorder } from './hooks'
-import { livenessService, faceComparisonService } from './services'
-import { snapVideo } from './utilities'
+import Select from "react-select";
+import { useFaceDetector, useRecorder } from "./hooks";
+import { livenessService, faceComparisonService } from "./services";
+import { snapVideo } from "./utilities";
 
 const second = 1000;
 
@@ -28,6 +29,13 @@ const Svg = styled.svg`
   }
 `;
 
+const dropdownOptions = [
+  { value: "blink", label: "blink" },
+  { value: "mouth", label: "mouth" },
+  { value: "yaw", label: "yaw" },
+  { value: "nod", label: "nod" },
+];
+
 export const ActiveLivenessEkyc = () => {
   const progressRef = useRef();
   const videoRef = useRef();
@@ -42,6 +50,7 @@ export const ActiveLivenessEkyc = () => {
   const [isLoading, setLoading] = useState(false);
   const [retries, setRetries] = useState(0);
   const [isSuccess, setSuccess] = useState(false);
+  const [livenessAction, setLivenessAction] = useState(dropdownOptions[0]);
 
   useEffect(() => {
     if (isValid)
@@ -107,7 +116,7 @@ export const ActiveLivenessEkyc = () => {
   useEffect(() => {
     if (recordedVideo) {
       setLoading(true);
-      livenessService(recordedVideo)
+      livenessService(recordedVideo, livenessAction.value)
         .then(({ data }) => {
           if (!data.pass) {
             setRetries((prev) => prev + 1);
@@ -123,11 +132,24 @@ export const ActiveLivenessEkyc = () => {
           setShouldStartRecord(true);
         });
     }
-  }, [recordedVideo]);
+  }, [recordedVideo, livenessAction]);
 
   return (
     <>
-      <div className="w-screen max-w-full py-10 flex justify-center">
+      <div className="w-screen max-w-full py-10 flex flex-col justify-center">
+        <div className="flex justify-center mb-5">
+          <Select
+            options={dropdownOptions}
+            defaultValue={dropdownOptions[0]}
+            onChange={option => setLivenessAction(option)}
+            styles={{
+              container: () => ({
+                position: "relative",
+                zIndex: "5000"
+              })
+            }}
+          />
+        </div>
         <div
           className={classNames(
             "relative",
@@ -159,7 +181,8 @@ export const ActiveLivenessEkyc = () => {
             style={{
               width: "95%",
               height: "95%",
-              WebkitMaskImage: "radial-gradient(circle, black 45%, rgba(0, 0, 0, 0.5) 45%)",
+              WebkitMaskImage:
+                "radial-gradient(circle, black 45%, rgba(0, 0, 0, 0.5) 45%)",
               maskImage:
                 "radial-gradient(circle, black 40%, rgba(0, 0, 0, 0.5) 40%)",
             }}
@@ -185,9 +208,7 @@ export const ActiveLivenessEkyc = () => {
           !isSuccess &&
           !shouldStartRecord &&
           "Hold your camera still"}
-        {shouldStartRecord &&
-          retries < 3 &&
-          "Please yaw and nod"}
+        {shouldStartRecord && retries < 3 && `Please ${livenessAction.label}`}
         {!shouldStartRecord && isLoading && "Processing..."}
         {retries >= 3 && "Face comparison failed, Please redo everything again"}
         {isSuccess && "Success"}
@@ -196,4 +217,4 @@ export const ActiveLivenessEkyc = () => {
   );
 };
 
-export default ActiveLivenessEkyc
+export default ActiveLivenessEkyc;

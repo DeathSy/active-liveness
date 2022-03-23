@@ -51,7 +51,7 @@ export const useRecorder = (videoRef) => {
       });
       recordedBlob.current = [];
       setRecordedVideo(
-        new File([recordedVideo], `${new Date()}`, {
+        new File([recordedVideo], `${new Date()}.mp4`, {
           type: getSupportedRecorderMimeType(),
         })
       );
